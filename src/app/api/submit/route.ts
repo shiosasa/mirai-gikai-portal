@@ -68,6 +68,33 @@ export async function POST(req: NextRequest) {
 
     console.log("【地方版みらい議会 フォーム送信を受付】", JSON.stringify(submission, null, 2));
 
+    // Supabaseが設定されている場合は portal_submissions に保存
+    const { getSupabaseClient } = await import("@/lib/supabase");
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      const { error: dbError } = await supabase.from("portal_submissions").insert({
+        report_type: reportType,
+        prefecture: prefecture || null,
+        municipality: municipality || null,
+        governance_type: governanceType || "市区",
+        region: region || "関東",
+        site_name: siteName,
+        url: url || null,
+        author_name: authorName || null,
+        author_social_url: authorSocialUrl || null,
+        description: description || null,
+        genres: Array.isArray(genres) ? genres : [],
+        reporter_name: reporterName || "匿名",
+        reporter_contact: reporterContact || null,
+        broken_detail: brokenDetail || null,
+        status: "pending",
+      });
+
+      if (dbError) {
+        console.error("Supabase insert error:", dbError);
+      }
+    }
+
     // Webhook通知（Discord / Slack など）
     const webhookUrl = process.env.NOTIFICATION_WEBHOOK_URL;
     if (webhookUrl) {
