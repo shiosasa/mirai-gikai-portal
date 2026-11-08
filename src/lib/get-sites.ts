@@ -1,17 +1,16 @@
 import { getSupabaseClient } from "./supabase";
 import { INITIAL_SITES } from "@/data/sites";
 import { localPortalSites } from "./site-filters";
-import { catalogStartedAt, isNewListing } from "./new-listing";
+import { isNewListing } from "./new-listing";
 import { MiraiGikaiSite } from "@/types/portal";
 
 function withNewListings(
   sites: MiraiGikaiSite[],
   now = Date.now(),
 ): MiraiGikaiSite[] {
-  const catalogStart = catalogStartedAt(sites.map((site) => site.createdAt));
   return sites.map((site) => ({
     ...site,
-    isNew: isNewListing(site.createdAt, now, catalogStart),
+    isNew: isNewListing(site.createdAt, now),
   }));
 }
 
