@@ -2,185 +2,13 @@
 
 import React, { useState } from "react";
 import { RegionCategory } from "@/types/portal";
+import { REGIONS } from "./japan-map-data";
 
 type JapanMapProps = {
   selectedRegion: string;
   onSelectRegion: (region: string) => void;
   siteCounts: Record<string, number>;
 };
-
-type RegionDef = {
-  id: RegionCategory;
-  name: string;
-  color: string;
-  hoverColor: string;
-  selectedColor: string;
-  borderColor: string;
-  textColor: string;
-  rects: { x: number; y: number; w: number; h: number }[];
-  center: { x: number; y: number };
-};
-
-// 添付画像に基づいたブロック日本地図の座標定義 (グリッドサイズ: 44px, 隙間: 4px)
-const S = 44; // 1マスのサイズ
-const G = 4;  // 隙間
-const U = S + G; // 1ユニット = 48px
-
-// 基準オフセット
-const OX = 30;
-const OY = 20;
-
-const REGIONS: RegionDef[] = [
-  {
-    id: "北海道・東北", // 北海道
-    name: "北海道",
-    color: "#7dd3fc",        // 水色
-    hoverColor: "#38bdf8",
-    selectedColor: "#0284c7",
-    borderColor: "#0369a1",
-    textColor: "#082f49",
-    rects: [
-      { x: OX + U * 9.5, y: OY + 0, w: U * 3 - G, h: U * 2 - G }, // 北海道大ブロック
-    ],
-    center: { x: OX + U * 11, y: OY + U * 1 - 2 },
-  },
-  {
-    id: "北海道・東北", // 東北
-    name: "東北",
-    color: "#86efac",        // 薄緑
-    hoverColor: "#4ade80",
-    selectedColor: "#16a34a",
-    borderColor: "#15803d",
-    textColor: "#14532d",
-    rects: [
-      { x: OX + U * 9.5, y: OY + U * 2.3, w: U * 1.5 - G, h: U - G },     // 青森
-      { x: OX + U * 11, y: OY + U * 2.3, w: U * 1.5 - G, h: U - G },     // 岩手
-      { x: OX + U * 9.5, y: OY + U * 3.3, w: U * 1.5 - G, h: U - G },     // 秋田
-      { x: OX + U * 11, y: OY + U * 3.3, w: U * 1.5 - G, h: U - G },       // 宮城
-      { x: OX + U * 9.5, y: OY + U * 4.3, w: U * 1.5 - G, h: U - G },     // 山形
-      { x: OX + U * 11, y: OY + U * 4.3, w: U * 1.5 - G, h: U - G },       // 福島
-    ],
-    center: { x: OX + U * 11, y: OY + U * 3.8 },
-  },
-  {
-    id: "関東",
-    name: "関東",
-    color: "#fca5a5",        // サーモンピンク
-    hoverColor: "#f87171",
-    selectedColor: "#dc2626",
-    borderColor: "#b91c1c",
-    textColor: "#7f1d1d",
-    rects: [
-      { x: OX + U * 9.5, y: OY + U * 5.6, w: U * 1.5 - G, h: U - G }, // 栃木
-      { x: OX + U * 11, y: OY + U * 5.6, w: U * 1.5 - G, h: U - G },   // 茨城
-      { x: OX + U * 9.5, y: OY + U * 6.6, w: U * 1.5 - G, h: U - G }, // 群馬・埼玉
-      { x: OX + U * 11, y: OY + U * 6.6, w: U * 1.5 - G, h: U - G },   // 千葉
-      { x: OX + U * 9.5, y: OY + U * 7.6, w: U * 1.5 - G, h: U - G }, // 東京
-      { x: OX + U * 11, y: OY + U * 7.6, w: U * 1.5 - G, h: U - G },   // 神奈川
-    ],
-    center: { x: OX + U * 11, y: OY + U * 7.1 },
-  },
-  {
-    id: "中部",
-    name: "中部",
-    color: "#fde047",        // 黄色
-    hoverColor: "#facc15",
-    selectedColor: "#ca8a04",
-    borderColor: "#a16207",
-    textColor: "#713f12",
-    rects: [
-      { x: OX + U * 7.5, y: OY + U * 5.6, w: U - G, h: U - G },       // 新潟
-      { x: OX + U * 8.5, y: OY + U * 5.6, w: U - G, h: U - G },       // 富山
-      { x: OX + U * 7.5, y: OY + U * 6.6, w: U - G, h: U - G },       // 石川・福井
-      { x: OX + U * 8.5, y: OY + U * 6.6, w: U - G, h: U - G },       // 長野・山梨
-      { x: OX + U * 7.5, y: OY + U * 7.6, w: U - G, h: U - G },       // 岐阜
-      { x: OX + U * 8.5, y: OY + U * 7.6, w: U - G, h: U - G },       // 静岡・愛知
-      { x: OX + U * 8.5, y: OY + U * 8.6, w: U - G, h: U - G },       // 三重
-    ],
-    center: { x: OX + U * 8.5, y: OY + U * 7.1 },
-  },
-  {
-    id: "近畿",
-    name: "近畿",
-    color: "#f472b6",        // ピンク
-    hoverColor: "#ec4899",
-    selectedColor: "#db2777",
-    borderColor: "#be185d",
-    textColor: "#831843",
-    rects: [
-      { x: OX + U * 5.5, y: OY + U * 6.6, w: U - G, h: U - G }, // 京都・滋賀
-      { x: OX + U * 6.5, y: OY + U * 6.6, w: U - G, h: U - G }, // 兵庫・大阪
-      { x: OX + U * 5.5, y: OY + U * 7.6, w: U - G, h: U - G }, // 奈良
-      { x: OX + U * 6.5, y: OY + U * 7.6, w: U - G, h: U - G }, // 和歌山
-    ],
-    center: { x: OX + U * 6.5, y: OY + U * 7.6 },
-  },
-  {
-    id: "中国・四国", // 中国
-    name: "中国",
-    color: "#93c5fd",        // 青
-    hoverColor: "#60a5fa",
-    selectedColor: "#2563eb",
-    borderColor: "#1d4ed8",
-    textColor: "#1e3a8a",
-    rects: [
-      { x: OX + U * 3.5, y: OY + U * 6.6, w: U - G, h: U - G }, // 鳥取
-      { x: OX + U * 4.5, y: OY + U * 6.6, w: U - G, h: U - G }, // 岡山
-      { x: OX + U * 2.5, y: OY + U * 6.6, w: U - G, h: U - G }, // 島根
-      { x: OX + U * 2.5, y: OY + U * 7.6, w: U - G, h: U - G }, // 山口
-      { x: OX + U * 3.5, y: OY + U * 7.6, w: U - G, h: U - G }, // 広島
-      { x: OX + U * 4.5, y: OY + U * 7.6, w: U - G, h: U - G }, // 瀬戸内
-    ],
-    center: { x: OX + U * 3.8, y: OY + U * 7.1 },
-  },
-  {
-    id: "中国・四国", // 四国
-    name: "四国",
-    color: "#bef264",        // 黄緑
-    hoverColor: "#a3e635",
-    selectedColor: "#65a30d",
-    borderColor: "#4d7c0f",
-    textColor: "#365314",
-    rects: [
-      { x: OX + U * 3.5, y: OY + U * 9.0, w: U - G, h: U - G }, // 香川
-      { x: OX + U * 4.5, y: OY + U * 9.0, w: U - G, h: U - G }, // 徳島
-      { x: OX + U * 3.5, y: OY + U * 10.0, w: U - G, h: U - G },// 愛媛
-      { x: OX + U * 4.5, y: OY + U * 10.0, w: U - G, h: U - G },// 高知
-    ],
-    center: { x: OX + U * 4.5, y: OY + U * 9.5 },
-  },
-  {
-    id: "九州・沖縄", // 九州
-    name: "九州",
-    color: "#d8b4fe",        // 紫
-    hoverColor: "#c084fc",
-    selectedColor: "#9333ea",
-    borderColor: "#7e22ce",
-    textColor: "#581c87",
-    rects: [
-      { x: OX + U * 0.2, y: OY + U * 7.6, w: U - G, h: U - G }, // 福岡
-      { x: OX + U * 1.2, y: OY + U * 7.6, w: U - G, h: U - G }, // 大分
-      { x: OX + U * 0.2, y: OY + U * 8.6, w: U - G, h: U - G }, // 佐賀・長崎
-      { x: OX + U * 1.2, y: OY + U * 8.6, w: U - G, h: U - G }, // 熊本
-      { x: OX + U * 0.2, y: OY + U * 9.6, w: U - G, h: U - G }, // 鹿児島
-      { x: OX + U * 1.2, y: OY + U * 9.6, w: U - G, h: U - G }, // 宮崎
-    ],
-    center: { x: OX + U * 1.1, y: OY + U * 8.6 },
-  },
-  {
-    id: "九州・沖縄", // 沖縄
-    name: "沖縄",
-    color: "#fed7aa",        // オレンジ
-    hoverColor: "#fdba74",
-    selectedColor: "#ea580c",
-    borderColor: "#c2410c",
-    textColor: "#7c2d12",
-    rects: [
-      { x: OX + U * 0.5, y: OY + U * 4.9, w: U - G, h: U - G }, // 沖縄（枠内）
-    ],
-    center: { x: OX + U * 0.5 + (U - G) / 2, y: OY + U * 4.9 + (U - G) / 2 },
-  },
-];
 
 export function JapanMap({
   selectedRegion,
@@ -226,13 +54,13 @@ export function JapanMap({
         {/* SVG ブロック日本地図 */}
         <div className="lg:col-span-8 w-full max-w-[540px] mx-auto bg-slate-50/50 rounded-xl p-3 border border-slate-100">
           <svg
-            viewBox="0 0 660 560"
+            viewBox="0 0 710 680"
             className="w-full h-auto select-none"
             style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.03))" }}
           >
             {/* 沖縄の区切り線（沖縄ブロックの下に水平線、右に斜め上） */}
             <path
-              d={`M ${OX - 10} ${OY + U * 6.3} L ${OX + U * 2.0} ${OY + U * 6.3} L ${OX + U * 3.0} ${OY + U * 5.2}`}
+              d="M 21 497 L 117 497 L 180 410"
               fill="none"
               stroke="#64748b"
               strokeWidth="2"
