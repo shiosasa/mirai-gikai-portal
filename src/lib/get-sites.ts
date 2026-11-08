@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "./supabase";
+import { DB_SNAPSHOT } from "@/data/db-snapshot";
 import { INITIAL_SITES } from "@/data/sites";
 import { localPortalSites } from "./site-filters";
 import { isNewListing } from "./new-listing";
@@ -14,10 +15,15 @@ function withNewListings(
   }));
 }
 
+function offlineSites(): MiraiGikaiSite[] {
+  const source = DB_SNAPSHOT.length > 0 ? DB_SNAPSHOT : INITIAL_SITES;
+  return withNewListings(localPortalSites(source));
+}
+
 export async function getSites(): Promise<MiraiGikaiSite[]> {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    return withNewListings(localPortalSites(INITIAL_SITES));
+    return offlineSites();
   }
 
   try {
@@ -28,7 +34,7 @@ export async function getSites(): Promise<MiraiGikaiSite[]> {
       .order("display_order", { ascending: true });
 
     if (error || !data || data.length === 0) {
-      return withNewListings(localPortalSites(INITIAL_SITES));
+      return offlineSites();
     }
 
     return withNewListings(localPortalSites(data.map((row: any) => ({
@@ -48,6 +54,6 @@ export async function getSites(): Promise<MiraiGikaiSite[]> {
     }))));
   } catch (err) {
     console.error("Failed to load sites from Supabase:", err);
-    return withNewListings(localPortalSites(INITIAL_SITES));
+    return offlineSites();
   }
 }
