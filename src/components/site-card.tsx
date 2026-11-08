@@ -41,7 +41,16 @@ export function SiteCard({ site }: { site: MiraiGikaiSite }) {
         </div>
 
         {/* サイト名 */}
-        <h3 className="font-bold text-lg text-slate-900 group mt-1">
+        <h3 className="mt-1 flex items-center gap-2 font-bold text-lg text-slate-900 group">
+          {site.isNew && (
+            <span
+              className="inline-flex shrink-0 items-center rounded-full bg-pink-100 px-2 py-0.5 text-xs font-bold leading-4 text-slate-800"
+              title="掲載してから14日以内のサイトです"
+            >
+              NEW
+              <span className="sr-only">（掲載してから14日以内）</span>
+            </span>
+          )}
           <a
             href={site.url}
             target="_blank"

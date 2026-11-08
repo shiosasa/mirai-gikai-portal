@@ -1,12 +1,24 @@
 import { getSupabaseClient } from "./supabase";
 import { INITIAL_SITES } from "@/data/sites";
 import { localPortalSites } from "./site-filters";
+import { catalogStartedAt, isNewListing } from "./new-listing";
 import { MiraiGikaiSite } from "@/types/portal";
+
+function withNewListings(
+  sites: MiraiGikaiSite[],
+  now = Date.now(),
+): MiraiGikaiSite[] {
+  const catalogStart = catalogStartedAt(sites.map((site) => site.createdAt));
+  return sites.map((site) => ({
+    ...site,
+    isNew: isNewListing(site.createdAt, now, catalogStart),
+  }));
+}
 
 export async function getSites(): Promise<MiraiGikaiSite[]> {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    return localPortalSites(INITIAL_SITES);
+    return withNewListings(localPortalSites(INITIAL_SITES));
   }
 
   try {
@@ -17,10 +29,10 @@ export async function getSites(): Promise<MiraiGikaiSite[]> {
       .order("display_order", { ascending: true });
 
     if (error || !data || data.length === 0) {
-      return localPortalSites(INITIAL_SITES);
+      return withNewListings(localPortalSites(INITIAL_SITES));
     }
 
-    return localPortalSites(data.map((row: any) => ({
+    return withNewListings(localPortalSites(data.map((row: any) => ({
       id: row.id,
       prefecture: row.prefecture,
       municipality: row.municipality,
@@ -33,9 +45,10 @@ export async function getSites(): Promise<MiraiGikaiSite[]> {
       governanceType: row.governance_type,
       region: row.region,
       isOfficial: row.is_official,
-    })));
+      createdAt: row.created_at,
+    }))));
   } catch (err) {
     console.error("Failed to load sites from Supabase:", err);
-    return localPortalSites(INITIAL_SITES);
+    return withNewListings(localPortalSites(INITIAL_SITES));
   }
 }

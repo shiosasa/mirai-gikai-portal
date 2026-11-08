@@ -30,4 +30,6 @@ export type MiraiGikaiSite = {
   governanceType: GovernanceType;
   region: RegionCategory;
   isOfficial?: boolean;      // 本家公式かどうか
+  createdAt?: string;        // 初掲載日時。編集では変えない
+  isNew?: boolean;
 };
