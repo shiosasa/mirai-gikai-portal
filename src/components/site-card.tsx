@@ -1,9 +1,11 @@
 import React from "react";
 import { MiraiGikaiSite } from "@/types/portal";
+import { areaScaleOf, assemblyKindOf } from "@/lib/site-filters";
 import { ExternalLink, MapPin, Tag, User, Sparkles } from "lucide-react";
 
 export function SiteCard({ site }: { site: MiraiGikaiSite }) {
   const isOita = site.id === "oita-city";
+  const classification = assemblyKindOf(site) ?? areaScaleOf(site);
 
   return (
     <article
@@ -33,7 +35,7 @@ export function SiteCard({ site }: { site: MiraiGikaiSite }) {
               </span>
             )}
             <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-              {site.governanceType}
+              {classification}
             </span>
           </div>
         </div>

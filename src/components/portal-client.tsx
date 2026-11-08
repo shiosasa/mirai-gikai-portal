@@ -1,11 +1,18 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { MiraiGikaiSite, RegionCategory, SiteGenre } from "@/types/portal";
+import { MiraiGikaiSite } from "@/types/portal";
 import { PortalHeader } from "@/components/portal-header";
+import { PortalAbout } from "@/components/portal-about";
 import { JapanMap } from "@/components/japan-map";
 import { RegionTabs } from "@/components/region-tabs";
 import { SiteCard } from "@/components/site-card";
+import {
+  AREA_SCALES,
+  ASSEMBLY_KINDS,
+  areaScaleOf,
+  assemblyKindOf,
+} from "@/lib/site-filters";
 import { Search, RotateCcw } from "lucide-react";
 
 type Props = {
@@ -15,8 +22,8 @@ type Props = {
 export function PortalClient({ sites }: Props) {
   const [keyword, setKeyword] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("すべて");
-  const [selectedType, setSelectedType] = useState<string>("すべて");
-  const [selectedGenre, setSelectedGenre] = useState<string>("すべて");
+  const [selectedScale, setSelectedScale] = useState<string>("すべて");
+  const [selectedKind, setSelectedKind] = useState<string>("すべて");
 
   // 地域別のサイト数を算出
   const siteCounts = useMemo(() => {
@@ -42,35 +49,35 @@ export function PortalClient({ sites }: Props) {
       const matchesRegion =
         selectedRegion === "すべて" || site.region === selectedRegion;
 
-      const matchesType =
-        selectedType === "すべて" || site.governanceType === selectedType;
+      const matchesScale =
+        selectedScale === "すべて" || areaScaleOf(site) === selectedScale;
 
-      const matchesGenre =
-        selectedGenre === "すべて" ||
-        site.genres.includes(selectedGenre as SiteGenre);
+      const matchesKind =
+        selectedKind === "すべて" || assemblyKindOf(site) === selectedKind;
 
-      return matchesKeyword && matchesRegion && matchesType && matchesGenre;
+      return matchesKeyword && matchesRegion && matchesScale && matchesKind;
     });
-  }, [sites, keyword, selectedRegion, selectedType, selectedGenre]);
+  }, [sites, keyword, selectedRegion, selectedScale, selectedKind]);
 
   const handleResetFilters = () => {
     setKeyword("");
     setSelectedRegion("すべて");
-    setSelectedType("すべて");
-    setSelectedGenre("すべて");
+    setSelectedScale("すべて");
+    setSelectedKind("すべて");
   };
 
   const isFiltered =
     keyword !== "" ||
     selectedRegion !== "すべて" ||
-    selectedType !== "すべて" ||
-    selectedGenre !== "すべて";
+    selectedScale !== "すべて" ||
+    selectedKind !== "すべて";
 
   return (
     <div>
       <PortalHeader />
 
       <div className="max-w-6xl mx-auto px-4 mt-6 space-y-6">
+        <PortalAbout />
         {/* 日本列島マップ（地域クリック連動） */}
         <JapanMap
           selectedRegion={selectedRegion}
@@ -93,41 +100,43 @@ export function PortalClient({ sites }: Props) {
               />
             </div>
 
-            {/* 自治体区分 */}
             <div className="flex items-center gap-1.5 shrink-0 text-xs sm:text-sm">
-              <span className="font-semibold text-slate-500 shrink-0">区分:</span>
+              <label
+                htmlFor="area-scale"
+                className="font-semibold text-slate-500 shrink-0"
+              >
+                地域別:
+              </label>
               <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                id="area-scale"
+                value={selectedScale}
+                onChange={(e) => setSelectedScale(e.target.value)}
                 className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                {["すべて", "都道府県", "市区", "町村", "本家・全国"].map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {["すべて", ...AREA_SCALES].map((scale) => (
+                  <option key={scale} value={scale}>
+                    {scale}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* ジャンル選択 */}
             <div className="flex items-center gap-1.5 shrink-0 text-xs sm:text-sm">
-              <span className="font-semibold text-slate-500 shrink-0">特徴:</span>
+              <label
+                htmlFor="assembly-kind"
+                className="font-semibold text-slate-500 shrink-0"
+              >
+                区分:
+              </label>
               <select
-                value={selectedGenre}
-                onChange={(e) => setSelectedGenre(e.target.value)}
+                id="assembly-kind"
+                value={selectedKind}
+                onChange={(e) => setSelectedKind(e.target.value)}
                 className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                {[
-                  "すべて",
-                  "AI要約・チャット",
-                  "Webアプリ",
-                  "4コマ漫画",
-                  "動画解説",
-                  "データ分析",
-                  "その他",
-                ].map((g) => (
-                  <option key={g} value={g}>
-                    {g}
+                {["すべて", ...ASSEMBLY_KINDS].map((kind) => (
+                  <option key={kind} value={kind}>
+                    {kind}
                   </option>
                 ))}
               </select>
