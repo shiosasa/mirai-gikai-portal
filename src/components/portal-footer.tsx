@@ -10,7 +10,7 @@ export function PortalFooter() {
             全国「地方版みらい議会」リンク集
           </p>
           <p className="text-slate-400 text-xs max-w-md">
-            本サイトは有志が運営する非公式リンク集です。「チームみらい」の公式サイトではありません。ご意見や不具合は党の公式窓口ではなく、各サイトの開発者・管理者、またはこのリンク集の管理者へご連絡ください。
+            本サイトは地方版だけの非公式リンク集です。国会版の本家は一覧に入れていません。各サイトの開発・管理者が、そのサイトの責任を持ちます。
           </p>
         </div>
 
@@ -39,7 +39,7 @@ export function PortalFooter() {
             rel="noopener noreferrer"
             className="hover:text-emerald-400 underline flex items-center gap-1"
           >
-            みらい議会（チームみらい公式）
+            本家「みらい議会」（国会版）
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>

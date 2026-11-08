@@ -1,11 +1,11 @@
 import React from "react";
 import { MiraiGikaiSite } from "@/types/portal";
-import { areaScaleOf, assemblyKindOf } from "@/lib/site-filters";
-import { ExternalLink, MapPin, Tag, User, Sparkles } from "lucide-react";
+import { localAreaLabel } from "@/lib/site-filters";
+import { ExternalLink, MapPin, User, Sparkles } from "lucide-react";
 
 export function SiteCard({ site }: { site: MiraiGikaiSite }) {
   const isOita = site.id === "oita-city";
-  const classification = assemblyKindOf(site) ?? areaScaleOf(site);
+  const classification = localAreaLabel(site);
 
   return (
     <article
@@ -58,18 +58,6 @@ export function SiteCard({ site }: { site: MiraiGikaiSite }) {
           {site.description}
         </p>
 
-        {/* ジャンルバッジ */}
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {site.genres.map((genre) => (
-            <span
-              key={genre}
-              className="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md flex items-center gap-1"
-            >
-              <Tag className="w-3 h-3 text-slate-400" />
-              {genre}
-            </span>
-          ))}
-        </div>
       </div>
 
       {/* フッター：製作者情報 & 見に行くボタン */}

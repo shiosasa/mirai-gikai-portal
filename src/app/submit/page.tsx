@@ -247,11 +247,14 @@ export default function SubmitPage() {
           ) : (
             /* 新規登録 または 変更・修正 の場合 */
             <div className="space-y-6">
-              {/* 都道府県 & 市区町村名 */}
+              {/* 県 & 区市町村。リンク集の検索に使う */}
+              <p className="text-xs text-slate-500 leading-relaxed">
+                県と区市町村は、リンク集の検索に使います。県単位のサイトは、区市町村にも県名を入れてください。国会版の本家は地方版のリンク集には載せません。
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    都道府県 <span className="text-red-500">*</span>
+                    県 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -264,7 +267,7 @@ export default function SubmitPage() {
                 </div>
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    市区町村名 <span className="text-red-500">*</span>
+                    区市町村 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"

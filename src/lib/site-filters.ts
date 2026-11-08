@@ -1,39 +1,77 @@
 import type { MiraiGikaiSite } from "@/types/portal";
 
-export const AREA_SCALES = ["全国", "都道府県単位", "市区町村単位"] as const;
-export const ASSEMBLY_KINDS = ["国会", "県議会", "市区町村議会"] as const;
+const DIET_OFFICIAL_ID = "hontai-official";
+const DIET_HOST = "gikai.team-mir.ai";
 
-export type AreaScale = (typeof AREA_SCALES)[number];
-export type AssemblyKind = (typeof ASSEMBLY_KINDS)[number];
+type OfficialCheck = Pick<MiraiGikaiSite, "id" | "url" | "isOfficial">;
 
-type ClassifiableSite = Pick<
-  MiraiGikaiSite,
-  "prefecture" | "governanceType" | "region" | "isOfficial"
->;
-
-/** 掲載範囲。全国ポータルと、都道府県・市区町村の単位を分ける。 */
-export function areaScaleOf(site: ClassifiableSite): AreaScale {
-  if (
-    site.prefecture === "全国" ||
-    site.region === "全国" ||
-    site.governanceType === "本家・全国"
-  ) {
-    return "全国";
+/** 国会版の本家。地方版の検索・リンク集には出さない。 */
+export function isDietOfficialSite(site: OfficialCheck): boolean {
+  if (site.id === DIET_OFFICIAL_ID || site.isOfficial) return true;
+  try {
+    return new URL(site.url).hostname === DIET_HOST;
+  } catch {
+    return site.url.includes(DIET_HOST);
   }
-  if (site.governanceType === "都道府県") return "都道府県単位";
-  return "市区町村単位";
+}
+
+export function localPortalSites(sites: MiraiGikaiSite[]): MiraiGikaiSite[] {
+  return sites.filter((site) => !isDietOfficialSite(site));
+}
+
+function byJapaneseName(left: string, right: string): number {
+  return left.localeCompare(right, "ja");
+}
+
+function isPrefectureWideName(name: string): boolean {
+  return name === "全国" || name === "北海道" || /[都府県]$/.test(name);
+}
+
+/** 県単位の検索候補。国会の本家と「全国」は含めない。 */
+export function prefectureOptions(sites: MiraiGikaiSite[]): string[] {
+  return [
+    ...new Set(
+      sites
+        .map((site) => site.prefecture.trim())
+        .filter((name) => name && name !== "全国"),
+    ),
+  ].sort(byJapaneseName);
 }
 
 /**
- * 議会の区分。
- * 公式の本家は国会、都道府県サイトは県議会、市区・町村サイトは市区町村議会。
- * 全国の地方議会まとめは特定の議会区分に入れない。
+ * 区市町村の検索候補。
+ * 県単位サイトは市区町村欄が県名と同じことが多いので、そこは県の検索に任せる。
  */
-export function assemblyKindOf(site: ClassifiableSite): AssemblyKind | null {
-  if (site.governanceType === "本家・全国" && site.isOfficial) return "国会";
-  if (site.governanceType === "都道府県") return "県議会";
-  if (site.governanceType === "市区" || site.governanceType === "町村") {
-    return "市区町村議会";
+export function municipalityOptions(
+  sites: MiraiGikaiSite[],
+  prefecture = "すべて",
+): string[] {
+  return [
+    ...new Set(
+      sites
+        .filter(
+          (site) => prefecture === "すべて" || site.prefecture === prefecture,
+        )
+        .map((site) => site.municipality.trim())
+        .filter(
+          (name) =>
+            name &&
+            !isPrefectureWideName(name) &&
+            name !== prefecture,
+        ),
+    ),
+  ].sort(byJapaneseName);
+}
+
+export function localAreaLabel(
+  site: Pick<MiraiGikaiSite, "prefecture" | "municipality" | "governanceType">,
+): string {
+  if (
+    site.governanceType === "都道府県" ||
+    site.municipality.trim() === site.prefecture.trim() ||
+    isPrefectureWideName(site.municipality)
+  ) {
+    return "県";
   }
-  return null;
+  return "区市町村";
 }

@@ -1,23 +1,13 @@
 import { ExternalLink } from "lucide-react";
 
-const ABOUT_ITEMS = [
+const SEPARATE_LINKS = [
   {
-    title: "みらい議会とは",
-    body: "チームみらいが開発した公式のプラットフォームです。国会の審議を、テクノロジーを使ってわかりやすく伝え、議会や政治を身近にします。",
     href: "https://gikai.team-mir.ai/",
-    linkLabel: "みらい議会（公式）を見る",
+    label: "本家「みらい議会」（国会版）",
   },
   {
-    title: "チームみらいとは",
-    body: "テクノロジーで政治の課題を解決することを目指す政党です。",
     href: "https://team-mir.ai/",
-    linkLabel: "チームみらいについて詳しく",
-  },
-  {
-    title: "地方版みらい議会とは",
-    body: "「チームみらい」の活動理念に共感し、「チームみらい」が開発した「みらい議会」をベースに作成し、または模して作られた非公式のプラットフォームです。",
-    href: "https://mirai-gikai-oitacity-web.vercel.app/",
-    linkLabel: "例: みらいぎかいっち＠大分市",
+    label: "チームみらい",
   },
 ] as const;
 
@@ -27,35 +17,40 @@ export function PortalAbout() {
       aria-labelledby="portal-about-heading"
       className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4"
     >
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h2
           id="portal-about-heading"
           className="text-lg sm:text-xl font-bold text-slate-900"
         >
           このリンク集について
         </h2>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          このサイトは「チームみらい」の公式サイトではありません。ご意見や不具合は、党の公式窓口ではなく、各サイトの開発者・管理者、またはこのリンク集の管理者へご連絡ください。各サイトの対応は、それぞれの開発者・管理者が行います。
+        <p className="text-sm text-slate-700 leading-relaxed">
+          議会をやさしく伝えるサイト「みらい議会」の地方版です。
         </p>
+        <div className="space-y-2 text-sm text-slate-600 leading-relaxed">
+          <p>
+            「みらい議会」は、政党チームみらいが運営する、国会を分かりやすく伝えるプラットフォームです。
+          </p>
+          <p>
+            このリンク集に載せる地方版は、チームみらいの理念に共感し、本家のコードを継承して開発したもの、あるいは本家を模して作成したサイトです。しおぱん（となりの政治）は、この定義に沿うサイトだけを掲載します。
+          </p>
+          <p>
+            各サイトの内容と運用の責任は、そのサイトの開発者・管理者が持ちます。このリンク集は紹介のための非公式な一覧で、チームみらいや本家の公式サイトではありません。国会を伝える本家は、地方議会の検索やリンク集には載せず、下の別リンクから開いてください。
+          </p>
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {ABOUT_ITEMS.map((item) => (
-          <article
-            key={item.title}
-            className="rounded-xl bg-slate-50 border border-slate-100 p-4 space-y-2"
+      <div className="flex flex-wrap gap-3">
+        {SEPARATE_LINKS.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800 hover:underline"
           >
-            <h3 className="font-bold text-slate-900">{item.title}</h3>
-            <p className="text-sm text-slate-600 leading-relaxed">{item.body}</p>
-            <a
-              href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:underline"
-            >
-              {item.linkLabel}
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </article>
+            {item.label}
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         ))}
       </div>
     </section>

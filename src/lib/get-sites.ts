@@ -1,11 +1,12 @@
 import { getSupabaseClient } from "./supabase";
 import { INITIAL_SITES } from "@/data/sites";
+import { localPortalSites } from "./site-filters";
 import { MiraiGikaiSite } from "@/types/portal";
 
 export async function getSites(): Promise<MiraiGikaiSite[]> {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    return INITIAL_SITES;
+    return localPortalSites(INITIAL_SITES);
   }
 
   try {
@@ -16,10 +17,10 @@ export async function getSites(): Promise<MiraiGikaiSite[]> {
       .order("display_order", { ascending: true });
 
     if (error || !data || data.length === 0) {
-      return INITIAL_SITES;
+      return localPortalSites(INITIAL_SITES);
     }
 
-    return data.map((row: any) => ({
+    return localPortalSites(data.map((row: any) => ({
       id: row.id,
       prefecture: row.prefecture,
       municipality: row.municipality,
@@ -32,9 +33,9 @@ export async function getSites(): Promise<MiraiGikaiSite[]> {
       governanceType: row.governance_type,
       region: row.region,
       isOfficial: row.is_official,
-    }));
+    })));
   } catch (err) {
     console.error("Failed to load sites from Supabase:", err);
-    return INITIAL_SITES;
+    return localPortalSites(INITIAL_SITES);
   }
 }

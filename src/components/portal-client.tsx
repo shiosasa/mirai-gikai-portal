@@ -7,12 +7,7 @@ import { PortalAbout } from "@/components/portal-about";
 import { JapanMap } from "@/components/japan-map";
 import { RegionTabs } from "@/components/region-tabs";
 import { SiteCard } from "@/components/site-card";
-import {
-  AREA_SCALES,
-  ASSEMBLY_KINDS,
-  areaScaleOf,
-  assemblyKindOf,
-} from "@/lib/site-filters";
+import { municipalityOptions, prefectureOptions } from "@/lib/site-filters";
 import { Search, RotateCcw } from "lucide-react";
 
 type Props = {
@@ -22,8 +17,8 @@ type Props = {
 export function PortalClient({ sites }: Props) {
   const [keyword, setKeyword] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("すべて");
-  const [selectedScale, setSelectedScale] = useState<string>("すべて");
-  const [selectedKind, setSelectedKind] = useState<string>("すべて");
+  const [selectedPrefecture, setSelectedPrefecture] = useState("すべて");
+  const [selectedMunicipality, setSelectedMunicipality] = useState("すべて");
 
   // 地域別のサイト数を算出
   const siteCounts = useMemo(() => {
@@ -49,28 +44,47 @@ export function PortalClient({ sites }: Props) {
       const matchesRegion =
         selectedRegion === "すべて" || site.region === selectedRegion;
 
-      const matchesScale =
-        selectedScale === "すべて" || areaScaleOf(site) === selectedScale;
+      const matchesPrefecture =
+        selectedPrefecture === "すべて" ||
+        site.prefecture === selectedPrefecture;
 
-      const matchesKind =
-        selectedKind === "すべて" || assemblyKindOf(site) === selectedKind;
+      const matchesMunicipality =
+        selectedMunicipality === "すべて" ||
+        site.municipality === selectedMunicipality;
 
-      return matchesKeyword && matchesRegion && matchesScale && matchesKind;
+      return (
+        matchesKeyword &&
+        matchesRegion &&
+        matchesPrefecture &&
+        matchesMunicipality
+      );
     });
-  }, [sites, keyword, selectedRegion, selectedScale, selectedKind]);
+  }, [
+    sites,
+    keyword,
+    selectedRegion,
+    selectedPrefecture,
+    selectedMunicipality,
+  ]);
+
+  const prefectures = useMemo(() => prefectureOptions(sites), [sites]);
+  const municipalities = useMemo(
+    () => municipalityOptions(sites, selectedPrefecture),
+    [sites, selectedPrefecture],
+  );
 
   const handleResetFilters = () => {
     setKeyword("");
     setSelectedRegion("すべて");
-    setSelectedScale("すべて");
-    setSelectedKind("すべて");
+    setSelectedPrefecture("すべて");
+    setSelectedMunicipality("すべて");
   };
 
   const isFiltered =
     keyword !== "" ||
     selectedRegion !== "すべて" ||
-    selectedScale !== "すべて" ||
-    selectedKind !== "すべて";
+    selectedPrefecture !== "すべて" ||
+    selectedMunicipality !== "すべて";
 
   return (
     <div>
@@ -102,20 +116,23 @@ export function PortalClient({ sites }: Props) {
 
             <div className="flex items-center gap-1.5 shrink-0 text-xs sm:text-sm">
               <label
-                htmlFor="area-scale"
+                htmlFor="prefecture-filter"
                 className="font-semibold text-slate-500 shrink-0"
               >
-                地域別:
+                県:
               </label>
               <select
-                id="area-scale"
-                value={selectedScale}
-                onChange={(e) => setSelectedScale(e.target.value)}
+                id="prefecture-filter"
+                value={selectedPrefecture}
+                onChange={(event) => {
+                  setSelectedPrefecture(event.target.value);
+                  setSelectedMunicipality("すべて");
+                }}
                 className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                {["すべて", ...AREA_SCALES].map((scale) => (
-                  <option key={scale} value={scale}>
-                    {scale}
+                {["すべて", ...prefectures].map((name) => (
+                  <option key={name} value={name}>
+                    {name}
                   </option>
                 ))}
               </select>
@@ -123,20 +140,20 @@ export function PortalClient({ sites }: Props) {
 
             <div className="flex items-center gap-1.5 shrink-0 text-xs sm:text-sm">
               <label
-                htmlFor="assembly-kind"
+                htmlFor="municipality-filter"
                 className="font-semibold text-slate-500 shrink-0"
               >
-                区分:
+                区市町村:
               </label>
               <select
-                id="assembly-kind"
-                value={selectedKind}
-                onChange={(e) => setSelectedKind(e.target.value)}
+                id="municipality-filter"
+                value={selectedMunicipality}
+                onChange={(event) => setSelectedMunicipality(event.target.value)}
                 className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                {["すべて", ...ASSEMBLY_KINDS].map((kind) => (
-                  <option key={kind} value={kind}>
-                    {kind}
+                {["すべて", ...municipalities].map((name) => (
+                  <option key={name} value={name}>
+                    {name}
                   </option>
                 ))}
               </select>

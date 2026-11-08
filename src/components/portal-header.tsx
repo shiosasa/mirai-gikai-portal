@@ -25,8 +25,7 @@ export function PortalHeader() {
               全国「地方版みらい議会」リンク集
             </h1>
             <p className="mt-2 text-emerald-100 text-xs sm:text-sm md:text-base max-w-2xl leading-relaxed">
-              各地の有志・市民が作った非公式の「地方版みらい議会」を探すリンク集です。
-              チームみらいの公式サイトではありません。ご意見や不具合は、各サイトの開発者・管理者へご連絡ください。
+              議会をやさしく伝えるサイト「みらい議会」の地方版です。
             </p>
           </div>
 
