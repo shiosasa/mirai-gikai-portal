@@ -60,7 +60,7 @@ export function JapanMap({
           >
             {/* 沖縄の区切り線（沖縄ブロックの下に水平線、右に斜め上） */}
             <path
-              d="M 21 497 L 117 497 L 180 410"
+              d="M 21 436 L 115 436 L 175 355"
               fill="none"
               stroke="#64748b"
               strokeWidth="2"
