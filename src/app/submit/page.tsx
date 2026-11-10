@@ -3,18 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Send, HeartHandshake, AlertCircle } from "lucide-react";
-import { SiteGenre, GovernanceType, RegionCategory } from "@/types/portal";
+import { GovernanceType, RegionCategory } from "@/types/portal";
 
 export type ReportType = "new" | "update" | "broken";
-
-const GENRES: SiteGenre[] = [
-  "AI要約・チャット",
-  "Webアプリ",
-  "4コマ漫画",
-  "動画解説",
-  "データ分析",
-  "その他",
-];
 
 const REGIONS: RegionCategory[] = [
   "北海道・東北",
@@ -40,7 +31,6 @@ export default function SubmitPage() {
     authorName: "",
     authorSocialUrl: "",
     description: "",
-    genres: [] as SiteGenre[],
     reporterName: "",
     reporterContact: "",
     brokenDetail: "",
@@ -49,15 +39,6 @@ export default function SubmitPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const toggleGenre = (genre: SiteGenre) => {
-    setFormData((prev) => ({
-      ...prev,
-      genres: prev.genres.includes(genre)
-        ? prev.genres.filter((g) => g !== genre)
-        : [...prev.genres, genre],
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -368,29 +349,6 @@ export default function SubmitPage() {
                     onChange={(e) => setFormData({ ...formData, authorSocialUrl: e.target.value })}
                     className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                   />
-                </div>
-              </div>
-
-              {/* ジャンル選択 */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-2">
-                  特徴・ジャンル（当てはまるものを選択）
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {GENRES.map((genre) => (
-                    <button
-                      type="button"
-                      key={genre}
-                      onClick={() => toggleGenre(genre)}
-                      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                        formData.genres.includes(genre)
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                      }`}
-                    >
-                      {genre}
-                    </button>
-                  ))}
                 </div>
               </div>
 
