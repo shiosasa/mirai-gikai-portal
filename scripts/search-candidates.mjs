@@ -214,6 +214,9 @@ async function searchGitHubRepositories() {
       console.log(`[GitHub API] 検索中: ${q}`);
       const res = await fetch(url, { headers });
 
+      // レートリミット対策で少し待機
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       if (!res.ok) {
         console.warn(`[GitHub API] 警告: 検索リクエスト失敗 (${res.status} ${res.statusText})`);
         continue;
@@ -242,6 +245,7 @@ async function searchGitHubRepositories() {
 async function getExistingExclusionSets(supabase) {
   const excludedUrls = new Set();
   const excludedRepos = new Set();
+  const excludedNames = new Set();
 
   // 1. オフラインの初期データ（src/data/sites.ts）から除外URLを収集
   try {
@@ -250,6 +254,10 @@ async function getExistingExclusionSets(supabase) {
     for (const m of urlMatches) {
       const norm = normalizeUrl(m[1]);
       if (norm) excludedUrls.add(norm);
+    }
+    const nameMatches = sitesFile.matchAll(/siteName:\s*["']([^"']+)["']/g);
+    for (const m of nameMatches) {
+      if (m[1]) excludedNames.add(m[1].trim());
     }
   } catch (err) {
     // ファイル読み込み失敗時はスルー
@@ -265,16 +273,18 @@ async function getExistingExclusionSets(supabase) {
       for (const s of sites) {
         if (s.url) excludedUrls.add(normalizeUrl(s.url));
         if (s.author_social_url) excludedUrls.add(normalizeUrl(s.author_social_url));
+        if (s.site_name) excludedNames.add(s.site_name.trim());
       }
     }
 
     // 既存申請・候補（portal_submissions - pending, approved, rejected すべて）
     const { data: subs, error: subsErr } = await supabase
       .from("portal_submissions")
-      .select("url, reporter_contact, admin_notes, status");
+      .select("url, site_name, reporter_contact, admin_notes, status");
     if (!subsErr && subs) {
       for (const sub of subs) {
         if (sub.url) excludedUrls.add(normalizeUrl(sub.url));
+        if (sub.site_name) excludedNames.add(sub.site_name.trim());
         if (sub.reporter_contact) excludedUrls.add(normalizeUrl(sub.reporter_contact));
         // admin_notes に保存された repo.full_name を抽出
         const repoMatch = sub.admin_notes?.match(/GitHub:\s*([\w.-]+\/[\w.-]+)/i);
@@ -285,7 +295,7 @@ async function getExistingExclusionSets(supabase) {
     }
   }
 
-  return { excludedUrls, excludedRepos };
+  return { excludedUrls, excludedRepos, excludedNames };
 }
 
 /**
@@ -305,8 +315,8 @@ async function main() {
   }
 
   // 1. 既存の登録・申請済みURLリストを取得
-  const { excludedUrls, excludedRepos } = await getExistingExclusionSets(supabase);
-  console.log(`[除外リスト] 登録・申請済みURL: ${excludedUrls.size} 件, リポジトリ: ${excludedRepos.size} 件`);
+  const { excludedUrls, excludedRepos, excludedNames } = await getExistingExclusionSets(supabase);
+  console.log(`[除外リスト] 登録・申請済みURL: ${excludedUrls.size} 件, リポジトリ: ${excludedRepos.size} 件, サイト名: ${excludedNames.size} 件`);
 
   // 2. GitHubから候補リポジトリを検索
   const repos = await searchGitHubRepositories();
@@ -357,6 +367,11 @@ async function main() {
       siteName = repo.name;
     }
 
+    // 既にサイト名が登録済みかチェック
+    if (excludedNames.has(siteName)) {
+      continue;
+    }
+
     const candidate = {
       report_type: "new",
       site_name: siteName,
@@ -383,6 +398,7 @@ async function main() {
     excludedRepos.add(fullNameLower);
     excludedUrls.add(normTargetUrl);
     excludedUrls.add(normRepoUrl);
+    excludedNames.add(siteName);
   }
 
   console.log(`\n=== サーチ完了: 新規候補 ${newCandidates.length} 件 ===`);
