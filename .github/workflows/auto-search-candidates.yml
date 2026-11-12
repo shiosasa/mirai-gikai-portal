@@ -1,0 +1,50 @@
+name: Auto Search Candidates
+
+on:
+  schedule:
+    # 毎日 日本時間 午前9:00 (UTC 0:00) に自動実行
+    - cron: '0 0 * * *'
+  # GitHub上のWeb画面から手動でいつでも即時実行可能
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'ドライラン（DBに書き込まず動作確認のみ行う場合はチェック）'
+        type: boolean
+        default: false
+
+jobs:
+  search-and-queue:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Candidate Search
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.SEARCH_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          NOTIFICATION_WEBHOOK_URL: ${{ secrets.NOTIFICATION_WEBHOOK_URL }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "Running in DRY-RUN mode..."
+            node scripts/search-candidates.mjs --dry-run
+          else
+            node scripts/search-candidates.mjs
+          fi

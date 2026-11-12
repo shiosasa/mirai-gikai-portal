@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start --port 3005",
     "lint": "next lint",
-    "test": "node --test src/lib/new-listing.test.ts src/components/japan-map.test.ts"
+    "test": "node --test src/lib/new-listing.test.ts src/components/japan-map.test.ts",
+    "search:candidates": "node scripts/search-candidates.mjs",
+    "search:candidates:dry": "node scripts/search-candidates.mjs --dry-run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
