@@ -267,11 +267,7 @@ export function PortalClient({ sites }: Props) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredSites.map((site) => (
-                <SiteCard
-                  key={site.id}
-                  site={site}
-                  onSelectTag={setSelectedTag}
-                />
+                <SiteCard key={site.id} site={site} />
               ))}
             </div>
           )}

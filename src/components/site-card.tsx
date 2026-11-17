@@ -52,13 +52,7 @@ const FEATURE_TAG_STYLES: Record<
   },
 };
 
-export function SiteCard({
-  site,
-  onSelectTag,
-}: {
-  site: MiraiGikaiSite;
-  onSelectTag?: (tag: FeatureTag) => void;
-}) {
+export function SiteCard({ site }: { site: MiraiGikaiSite }) {
   const isOita = site.id === "oita-city";
   const classification = localAreaLabel(site);
   const features = getSiteFeatures(site);
@@ -138,21 +132,13 @@ export function SiteCard({
               const style = FEATURE_TAG_STYLES[tag];
               if (!style) return null;
               return (
-                <button
+                <span
                   key={tag}
-                  type="button"
-                  onClick={(e) => {
-                    if (onSelectTag) {
-                      e.preventDefault();
-                      onSelectTag(tag);
-                    }
-                  }}
-                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium border transition-transform hover:scale-105 active:scale-95 cursor-pointer ${style.bg} ${style.text} ${style.border}`}
-                  title={`${tag}で絞り込む`}
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium border ${style.bg} ${style.text} ${style.border}`}
                 >
                   <span className={`size-1.5 rounded-full ${style.dot}`} />
                   {style.label}
-                </button>
+                </span>
               );
             })}
           </div>
