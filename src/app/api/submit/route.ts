@@ -50,11 +50,10 @@ export async function POST(req: NextRequest) {
     }
 
     const featureList: string[] = Array.isArray(features) ? features : [];
-    const autoDescription =
-      description ||
-      `【${recommendationType === "self" ? "自薦" : "他薦"}】特徴: ${
-        featureList.length > 0 ? featureList.join("、") : "地方版みらい議会"
-      }`;
+    const cleanDescription = description || siteName;
+    const submissionGenres = Array.from(
+      new Set(["Webアプリ", ...featureList])
+    );
 
     const submission = {
       id: `submission-${Date.now()}`,
@@ -68,9 +67,9 @@ export async function POST(req: NextRequest) {
       url: url || null,
       authorName: authorName || (recommendationType === "self" ? "開発者本人" : "推薦"),
       authorSocialUrl: authorSocialUrl || null,
-      description: autoDescription,
+      description: cleanDescription,
       features: featureList,
-      genres: Array.isArray(genres) ? genres : ["Webアプリ"],
+      genres: submissionGenres,
       reporterName: reporterName || (recommendationType === "self" ? "自薦" : "他薦"),
       reporterContact: reporterContact || null,
       brokenDetail: brokenDetail || null,
@@ -93,8 +92,8 @@ export async function POST(req: NextRequest) {
         url: url || null,
         author_name: submission.authorName,
         author_social_url: authorSocialUrl || null,
-        description: autoDescription,
-        genres: submission.genres,
+        description: cleanDescription,
+        genres: submissionGenres,
         reporter_name: submission.reporterName,
         reporter_contact: reporterContact || null,
         broken_detail: brokenDetail || null,
