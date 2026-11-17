@@ -20,6 +20,7 @@ const SEARCH_FEATURE_TAGS = [
   "簡単・難しいの切り替え",
   "AIアシスタント",
   "AIインタビュー",
+  "オープンソース",
 ] as const;
 
 export function PortalClient({ sites }: Props) {
