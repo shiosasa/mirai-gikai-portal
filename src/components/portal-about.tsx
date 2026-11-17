@@ -1,4 +1,5 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Sparkles, ChevronDown } from "lucide-react";
+import { ListingGuidelines } from "@/components/listing-guidelines";
 
 const SEPARATE_LINKS = [
   {
@@ -15,7 +16,7 @@ export function PortalAbout() {
   return (
     <section
       aria-labelledby="portal-about-heading"
-      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4"
+      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-5"
     >
       <div className="space-y-3">
         <h2
@@ -24,7 +25,7 @@ export function PortalAbout() {
         >
           このリンク集について
         </h2>
-        <p className="text-sm text-slate-700 leading-relaxed">
+        <p className="text-sm text-slate-700 leading-relaxed font-medium">
           議会をやさしく伝えるサイト「みらい議会」の地方版です。
         </p>
         <div className="space-y-2 text-sm text-slate-600 leading-relaxed">
@@ -39,6 +40,21 @@ export function PortalAbout() {
           </p>
         </div>
       </div>
+
+      {/* 掲載基準・ガイドライン */}
+      <details className="group rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 text-sm" open>
+        <summary className="cursor-pointer list-none font-bold text-slate-800 flex items-center justify-between">
+          <span className="flex items-center gap-2 text-emerald-950 font-bold">
+            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+            【掲載基準】地方版みらい議会のマスト条件・選択条件
+          </span>
+          <ChevronDown className="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform shrink-0" />
+        </summary>
+        <div className="mt-4 pt-3 border-t border-emerald-200/60">
+          <ListingGuidelines />
+        </div>
+      </details>
+
       <div className="flex flex-wrap gap-3">
         {SEPARATE_LINKS.map((item) => (
           <a

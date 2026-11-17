@@ -3,6 +3,7 @@ import { DB_SNAPSHOT } from "@/data/db-snapshot";
 import { INITIAL_SITES } from "@/data/sites";
 import { localPortalSites } from "./site-filters";
 import { isNewListing } from "./new-listing";
+import { sortPortalSites } from "./sort-sites";
 import { MiraiGikaiSite } from "@/types/portal";
 
 function withNewListings(
@@ -17,7 +18,7 @@ function withNewListings(
 
 function offlineSites(): MiraiGikaiSite[] {
   const source = DB_SNAPSHOT.length > 0 ? DB_SNAPSHOT : INITIAL_SITES;
-  return withNewListings(localPortalSites(source));
+  return sortPortalSites(withNewListings(localPortalSites(source)));
 }
 
 export async function getSites(): Promise<MiraiGikaiSite[]> {
@@ -37,21 +38,34 @@ export async function getSites(): Promise<MiraiGikaiSite[]> {
       return offlineSites();
     }
 
-    return withNewListings(localPortalSites(data.map((row: any) => ({
-      id: row.id,
-      prefecture: row.prefecture,
-      municipality: row.municipality,
-      siteName: row.site_name,
-      url: row.url,
-      authorName: row.author_name,
-      authorSocialUrl: row.author_social_url || undefined,
-      description: row.description,
-      genres: row.genres ?? [],
-      governanceType: row.governance_type,
-      region: row.region,
-      isOfficial: row.is_official,
-      createdAt: row.created_at,
-    }))));
+    return sortPortalSites(
+      withNewListings(
+        localPortalSites(
+          data.map((row: any) => ({
+            id: row.id,
+            prefecture: row.prefecture,
+            municipality: row.municipality,
+            siteName: row.site_name,
+            url: row.url,
+            authorName: row.author_name,
+            authorSocialUrl: row.author_social_url || undefined,
+            description: row.description,
+            genres: row.genres ?? [],
+            features: row.features ?? [],
+            featured: row.featured ?? false,
+            hasRuby: row.has_ruby ?? false,
+            hasLevelSwitch: row.has_level_switch ?? false,
+            hasAiAssistant: row.has_ai_assistant ?? false,
+            hasAiInterview: row.has_ai_interview ?? false,
+            hasOpenSource: row.has_open_source ?? false,
+            governanceType: row.governance_type,
+            region: row.region,
+            isOfficial: row.is_official,
+            createdAt: row.created_at,
+          }))
+        )
+      )
+    );
   } catch (err) {
     console.error("Failed to load sites from Supabase:", err);
     return offlineSites();

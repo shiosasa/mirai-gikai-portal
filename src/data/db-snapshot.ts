@@ -187,6 +187,13 @@ export const DB_SNAPSHOT: MiraiGikaiSite[] = [
       "Webアプリ",
       "AI要約・チャット"
     ],
+    "features": [
+      "ルビ機能",
+      "簡単難しい切り替え",
+      "AIアシスタント",
+      "AIインタビュー",
+      "オープンソース"
+    ],
     "governanceType": "市区",
     "region": "関東",
     "isOfficial": false,
@@ -255,6 +262,13 @@ export const DB_SNAPSHOT: MiraiGikaiSite[] = [
     "genres": [
       "Webアプリ",
       "AI要約・チャット"
+    ],
+    "features": [
+      "ルビ機能",
+      "簡単難しい切り替え",
+      "AIアシスタント",
+      "AIインタビュー",
+      "オープンソース"
     ],
     "governanceType": "市区",
     "region": "関東",
@@ -410,6 +424,13 @@ export const DB_SNAPSHOT: MiraiGikaiSite[] = [
       "Webアプリ",
       "AI要約・チャット"
     ],
+    "features": [
+      "ルビ機能",
+      "簡単難しい切り替え",
+      "AIアシスタント",
+      "AIインタビュー",
+      "オープンソース"
+    ],
     "governanceType": "市区",
     "region": "九州・沖縄",
     "isOfficial": false,
@@ -494,6 +515,13 @@ export const DB_SNAPSHOT: MiraiGikaiSite[] = [
     "genres": [
       "Webアプリ",
       "AI要約・チャット"
+    ],
+    "features": [
+      "ルビ機能",
+      "簡単難しい切り替え",
+      "AIアシスタント",
+      "AIインタビュー",
+      "オープンソース"
     ],
     "governanceType": "市区",
     "region": "九州・沖縄",

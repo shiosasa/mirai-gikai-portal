@@ -35,10 +35,10 @@ export function PortalHeader() {
               className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-5 py-3 rounded-full shadow-lg transition-transform hover:scale-105 text-sm md:text-base"
             >
               <PlusCircle className="w-5 h-5 text-slate-900" />
-              掲載・変更を連絡する
+              掲載を申請する
             </Link>
             <span className="text-[11px] text-emerald-100/90 font-medium">
-              自薦・他薦・リンク切れ報告もこちら
+              自薦・他薦歓迎（チェック式）
             </span>
           </div>
         </div>

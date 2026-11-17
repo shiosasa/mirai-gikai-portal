@@ -1,55 +1,92 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Send, HeartHandshake, AlertCircle } from "lucide-react";
-import { GovernanceType, RegionCategory } from "@/types/portal";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Send,
+  HeartHandshake,
+  AlertCircle,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+import { FEATURE_TAGS, FeatureTag, GovernanceType } from "@/types/portal";
+import { LISTING_GUIDELINES } from "@/data/guidelines";
+import { PREFECTURES, getRegionByPrefecture } from "@/data/prefectures";
 
-export type ReportType = "new" | "update" | "broken";
-
-const REGIONS: RegionCategory[] = [
-  "北海道・東北",
-  "関東",
-  "中部",
-  "近畿",
-  "中国・四国",
-  "九州・沖縄",
-];
-
-const TYPES: GovernanceType[] = ["都道府県", "市区", "町村", "本家・全国"];
+export type RecommendationType = "self" | "other";
 
 export default function SubmitPage() {
-  const [reportType, setReportType] = useState<ReportType>("new");
+  // 1. 区分選択（自薦 / 他薦）
+  const [recommendationType, setRecommendationType] =
+    useState<RecommendationType>("self");
 
-  const [formData, setFormData] = useState({
-    siteName: "",
-    url: "",
-    prefecture: "",
-    municipality: "",
-    governanceType: "市区" as GovernanceType,
-    region: "関東" as RegionCategory,
-    authorName: "",
-    authorSocialUrl: "",
-    description: "",
-    reporterName: "",
-    reporterContact: "",
-    brokenDetail: "",
+  // 2. 基本情報
+  const [siteName, setSiteName] = useState("");
+  const [url, setUrl] = useState("");
+  const [prefecture, setPrefecture] = useState("大分県");
+  const [municipality, setMunicipality] = useState("");
+  const [governanceType, setGovernanceType] = useState<GovernanceType>("市区");
+
+  // 3. マスト条件の確認チェック（必須）
+  const [mustConditions, setMustConditions] = useState<Record<string, boolean>>({
+    philosophy: false,
+    independent: false,
   });
 
+  // 4. 特徴・アプローチの選択（5つのタグ項目から複数選択可）
+  const [selectedFeatures, setSelectedFeatures] = useState<FeatureTag[]>([]);
+
+  // 送信状態
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const allMustChecked =
+    mustConditions.philosophy && mustConditions.independent;
+
+  const toggleFeature = (tag: FeatureTag) => {
+    setSelectedFeatures((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleMustConditionChange = (id: string, checked: boolean) => {
+    setMustConditions((prev) => ({ ...prev, [id]: checked }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!allMustChecked) {
+      setErrorMessage("掲載基準のマスト条件をすべて確認・同意してください。");
+      return;
+    }
+    if (selectedFeatures.length === 0) {
+      setErrorMessage("特徴・アプローチ（選択条件）を1つ以上選択してください。");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage("");
 
     try {
+      const region = getRegionByPrefecture(prefecture);
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, reportType }),
+        body: JSON.stringify({
+          reportType: "new",
+          recommendationType,
+          siteName: siteName.trim(),
+          url: url.trim(),
+          prefecture: prefecture.trim(),
+          municipality: municipality.trim() || prefecture.trim(),
+          governanceType,
+          region,
+          features: selectedFeatures,
+          authorName: recommendationType === "self" ? "開発者本人" : "地域有志・推薦",
+        }),
       });
 
       const data = await res.json();
@@ -58,8 +95,12 @@ export default function SubmitPage() {
       }
 
       setSubmitted(true);
-    } catch (err: any) {
-      setErrorMessage(err.message || "エラーが発生しました。時間をおいてお試しください。");
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : "エラーが発生しました。時間をおいてお試しください。"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -68,34 +109,40 @@ export default function SubmitPage() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white max-w-lg w-full p-8 rounded-2xl shadow-sm border border-slate-200 text-center space-y-4">
+        <div className="bg-white max-w-lg w-full p-8 rounded-2xl shadow-sm border border-slate-200 text-center space-y-5">
           <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <h2 className="text-2xl font-bold text-slate-800">
-            ご連絡ありがとうございます！
+            掲載申請を受け付けました！
           </h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            {reportType === "new" && (
-              <>
-                「<strong>{formData.siteName || formData.url}</strong>」の掲載申請を受け付けました。<br />
-                内容を確認のうえ、ポータルに掲載させていただきます！
-              </>
-            )}
-            {reportType === "update" && (
-              <>
-                「<strong>{formData.siteName || formData.url}</strong>」の変更・修正連絡を受け付けました。<br />
-                確認のうえ、掲載内容を更新いたします。
-              </>
-            )}
-            {reportType === "broken" && (
-              <>
-                リンク切れ・動作不良のご報告を受け付けました。<br />
-                教えていただき助かります。状況を確認して対応いたします！
-              </>
-            )}
+          <div className="text-sm text-slate-600 leading-relaxed space-y-2 bg-slate-50 p-4 rounded-xl text-left border border-slate-100">
+            <p>
+              <strong>サイト名：</strong>
+              {siteName}
+            </p>
+            <p>
+              <strong>URL：</strong>
+              <span className="break-all">{url}</span>
+            </p>
+            <p>
+              <strong>対象自治体：</strong>
+              {prefecture} {municipality}
+            </p>
+            <p>
+              <strong>区分：</strong>
+              {recommendationType === "self" ? "自薦（開発者・運営者）" : "他薦（推薦・紹介）"}
+            </p>
+            <p>
+              <strong>選択された特徴：</strong>
+              {selectedFeatures.join("、")}
+            </p>
+          </div>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            掲載基準を確認のうえ、管理画面にて承認・ポータル掲載を反映いたします。
+            ご申請ありがとうございました！
           </p>
-          <div className="pt-4">
+          <div className="pt-2">
             <Link
               href="/"
               className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm"
@@ -122,51 +169,14 @@ export default function SubmitPage() {
         <div className="mb-8">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100/70 px-3 py-1 rounded-full mb-3">
             <HeartHandshake className="w-3.5 h-3.5 text-emerald-600" />
-            自薦・他薦どちらも大歓迎！
+            自薦・他薦どちらも歓迎！
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            掲載・情報提供・お問い合わせ
+            地方版みらい議会 掲載申請
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
-            「新しい地方版みらい議会を作ったよ」「こんなサイトを見つけたよ」「URLが変わった・動いていない」など、お気軽にお寄せください！
+            自由記述不要のチェック式申請フォームです。掲載基準の確認と選択肢のチェックだけで手軽に申請いただけます。
           </p>
-        </div>
-
-        {/* ご用件（タブ選択） */}
-        <div className="mb-8 p-1 bg-slate-100 rounded-xl grid grid-cols-3 gap-1 text-xs sm:text-sm font-bold text-slate-600">
-          <button
-            type="button"
-            onClick={() => setReportType("new")}
-            className={`py-2.5 px-2 rounded-lg transition-all text-center ${
-              reportType === "new"
-                ? "bg-white text-emerald-700 shadow-sm"
-                : "hover:text-slate-900"
-            }`}
-          >
-            新しく登録（自薦・他薦）
-          </button>
-          <button
-            type="button"
-            onClick={() => setReportType("update")}
-            className={`py-2.5 px-2 rounded-lg transition-all text-center ${
-              reportType === "update"
-                ? "bg-white text-emerald-700 shadow-sm"
-                : "hover:text-slate-900"
-            }`}
-          >
-            掲載内容の変更・修正
-          </button>
-          <button
-            type="button"
-            onClick={() => setReportType("broken")}
-            className={`py-2.5 px-2 rounded-lg transition-all text-center ${
-              reportType === "broken"
-                ? "bg-white text-rose-700 shadow-sm"
-                : "hover:text-slate-900"
-            }`}
-          >
-            動いてない・閉鎖の報告
-          </button>
         </div>
 
         {errorMessage && (
@@ -176,254 +186,232 @@ export default function SubmitPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 text-sm">
-          {/* リンク切れ・閉鎖報告の場合のフォーム */}
-          {reportType === "broken" ? (
-            <div className="space-y-5">
-              <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-xs text-rose-800 leading-relaxed">
-                リンク切れやサービス閉鎖のご報告を受け付けています。教えていただきありがとうございます！
-              </div>
+        <form onSubmit={handleSubmit} className="space-y-8 text-sm">
+          {/* 1. 区分選択（自薦 / 他薦） */}
+          <section className="space-y-3">
+            <label className="block font-bold text-slate-800 text-base">
+              1. 申請区分 <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setRecommendationType("self")}
+                className={`p-4 rounded-xl border text-left transition-all ${
+                  recommendationType === "self"
+                    ? "border-emerald-500 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500"
+                    : "border-slate-200 bg-white hover:border-slate-300 text-slate-700"
+                }`}
+              >
+                <div className="font-bold text-sm sm:text-base">自薦</div>
+                <div className="text-xs text-slate-500 mt-1">
+                  開発者・運営者本人による申請
+                </div>
+              </button>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  対象のサイト名、または自治体名 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="例: みらい議会＠○○市、○○県"
-                  value={formData.siteName}
-                  onChange={(e) => setFormData({ ...formData, siteName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  該当サイトのURL（分かる場合）
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  value={formData.url}
-                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  状況の詳細 <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  placeholder="例: アクセスすると404エラーになって開けない、ドメインが切れている、など"
-                  value={formData.brokenDetail}
-                  onChange={(e) => setFormData({ ...formData, brokenDetail: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none text-sm leading-relaxed"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => setRecommendationType("other")}
+                className={`p-4 rounded-xl border text-left transition-all ${
+                  recommendationType === "other"
+                    ? "border-emerald-500 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500"
+                    : "border-slate-200 bg-white hover:border-slate-300 text-slate-700"
+                }`}
+              >
+                <div className="font-bold text-sm sm:text-base">他薦</div>
+                <div className="text-xs text-slate-500 mt-1">
+                  見つけたサイトの推薦・情報提供
+                </div>
+              </button>
             </div>
-          ) : (
-            /* 新規登録 または 変更・修正 の場合 */
-            <div className="space-y-6">
-              {/* 県 & 区市町村。リンク集の検索に使う */}
-              <p className="text-xs text-slate-500 leading-relaxed">
-                県と区市町村は、リンク集の検索に使います。県単位のサイトは、区市町村にも県名を入れてください。国会版の本家は地方版のリンク集には載せません。
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    県 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="例: 大分県, 東京都"
-                    value={formData.prefecture}
-                    onChange={(e) => setFormData({ ...formData, prefecture: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    区市町村 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="例: 大分市, 世田谷区, 葉山町"
-                    value={formData.municipality}
-                    onChange={(e) => setFormData({ ...formData, municipality: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                  />
-                </div>
-              </div>
+          </section>
 
-              {/* 地域ブロック & 区分 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    地域ブロック <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.region}
-                    onChange={(e) => setFormData({ ...formData, region: e.target.value as RegionCategory })}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white"
-                  >
-                    {REGIONS.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    自治体の区分 <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.governanceType}
-                    onChange={(e) => setFormData({ ...formData, governanceType: e.target.value as GovernanceType })}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white"
-                  >
-                    {TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+          {/* 2. 基本情報 */}
+          <section className="space-y-4">
+            <label className="block font-bold text-slate-800 text-base border-t border-slate-100 pt-6">
+              2. サイト基本情報 <span className="text-red-500">*</span>
+            </label>
 
-              {/* サイト名 */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  サイト名・コンテンツ名 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="例: みらいぎかいっち＠大分市"
-                  value={formData.siteName}
-                  onChange={(e) => setFormData({ ...formData, siteName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                />
-              </div>
-
-              {/* サイトURL */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  公開URL <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://..."
-                  value={formData.url}
-                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                />
-              </div>
-
-              {/* 製作者名 & SNSリンク */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    製作者・団体名（他薦で不明な場合は「有志」等でOK） <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="例: しおぱん, シビックテック大分"
-                    value={formData.authorName}
-                    onChange={(e) => setFormData({ ...formData, authorName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    製作者のX(Twitter)やプロフィールURL（任意）
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://x.com/..."
-                    value={formData.authorSocialUrl}
-                    onChange={(e) => setFormData({ ...formData, authorSocialUrl: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* 紹介文 */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  サイトの紹介・工夫点・変更内容 <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  placeholder={
-                    reportType === "update"
-                      ? "変更点や修正したい内容を具体的に教えてください。"
-                      : "サイトの特徴やおすすめポイントなどを教えてください！"
-                  }
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm leading-relaxed"
-                />
-              </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1 text-xs sm:text-sm">
+                サイト名・コンテンツ名 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="例: みらいぎかいっち＠大分市"
+                value={siteName}
+                onChange={(e) => setSiteName(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+              />
             </div>
-          )}
 
-          {/* 連絡者の情報（任意） */}
-          <div className="pt-4 border-t border-slate-100 space-y-4">
-            <h3 className="font-bold text-xs text-slate-400">
-              ご連絡者さまの情報（任意・非公開）
-            </h3>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1 text-xs sm:text-sm">
+                サイトURL <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="url"
+                required
+                placeholder="https://..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+              />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  お名前・ニックネーム
+                <label className="block font-semibold text-slate-700 mb-1 text-xs sm:text-sm">
+                  対象都道府県 <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="匿名でもOKです"
-                  value={formData.reporterName}
-                  onChange={(e) => setFormData({ ...formData, reporterName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-xs"
-                />
+                <select
+                  value={prefecture}
+                  onChange={(e) => setPrefecture(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white"
+                >
+                  {PREFECTURES.map((p) => (
+                    <option key={p.name} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  連絡先（Xアカウントやメールアドレス）
+                <label className="block font-semibold text-slate-700 mb-1 text-xs sm:text-sm">
+                  市区町村名（県単位の場合は県名） <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="任意（確認が必要な場合のみ使用）"
-                  value={formData.reporterContact}
-                  onChange={(e) => setFormData({ ...formData, reporterContact: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-xs"
+                  required
+                  placeholder="例: 大分市、世田谷区、大分県"
+                  value={municipality}
+                  onChange={(e) => setMunicipality(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                 />
               </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full text-white font-bold py-3.5 rounded-xl shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 text-base ${
-              reportType === "broken"
-                ? "bg-rose-600 hover:bg-rose-700"
-                : "bg-emerald-600 hover:bg-emerald-700"
-            }`}
-          >
-            <Send className="w-4 h-4" />
-            {isSubmitting
-              ? "送信中..."
-              : reportType === "broken"
-              ? "不具合・閉鎖を報告する"
-              : reportType === "update"
-              ? "変更内容を送信する"
-              : "掲載を申請する（自薦・他薦）"}
-          </button>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1 text-xs sm:text-sm">
+                自治体区分 <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={governanceType}
+                onChange={(e) => setGovernanceType(e.target.value as GovernanceType)}
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white"
+              >
+                <option value="市区">市区（市・特別区）</option>
+                <option value="都道府県">都道府県</option>
+                <option value="町村">町村</option>
+                <option value="本家・全国">全国・本家</option>
+              </select>
+            </div>
+          </section>
+
+          {/* 3. マスト条件の確認チェックボックス（必須） */}
+          <section className="space-y-3 border-t border-slate-100 pt-6">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              <label className="block font-bold text-slate-800 text-base">
+                3. マスト条件の確認 <span className="text-red-500">（すべて必須）</span>
+              </label>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              以下の2つのマスト条件を満たしていることをご確認いただき、チェックを入れてください。
+            </p>
+
+            <div className="space-y-3">
+              {LISTING_GUIDELINES.mustConditions.map((cond) => {
+                const isChecked = Boolean(mustConditions[cond.id]);
+                return (
+                  <label
+                    key={cond.id}
+                    className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      isChecked
+                        ? "border-emerald-300 bg-emerald-50/50"
+                        : "border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) =>
+                        handleMustConditionChange(cond.id, e.target.checked)
+                      }
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <div className="space-y-1">
+                      <div className="font-bold text-slate-800 text-xs sm:text-sm">
+                        {cond.title}
+                      </div>
+                      <div className="text-xs text-slate-600 leading-relaxed">
+                        {cond.text}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* 4. 特徴・アプローチの選択チェックボックス（複数選択可） */}
+          <section className="space-y-3 border-t border-slate-100 pt-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-600" />
+              <label className="block font-bold text-slate-800 text-base">
+                4. 特徴・アプローチの選択 <span className="text-red-500">（1つ以上選択）</span>
+              </label>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              該当サイトに実装されている機能や取り組みを選択してください（複数選択可）。
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {FEATURE_TAGS.map((tag) => {
+                const isSelected = selectedFeatures.includes(tag);
+                return (
+                  <label
+                    key={tag}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      isSelected
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-900 font-bold shadow-2xs"
+                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleFeature(tag)}
+                      className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <span className="text-xs sm:text-sm">{tag}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* 送信ボタン */}
+          <div className="pt-4 border-t border-slate-100">
+            <button
+              type="submit"
+              disabled={isSubmitting || !allMustChecked || selectedFeatures.length === 0}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-base"
+            >
+              <Send className="w-4 h-4" />
+              {isSubmitting
+                ? "送信中..."
+                : !allMustChecked
+                ? "マスト条件にチェックしてください"
+                : selectedFeatures.length === 0
+                ? "特徴を1つ以上選択してください"
+                : "掲載を申請する"}
+            </button>
+            <p className="text-center text-[11px] text-slate-400 mt-2">
+              ※ 送信後、管理画面にて内容を確認のうえ掲載されます
+            </p>
+          </div>
         </form>
       </div>
     </div>

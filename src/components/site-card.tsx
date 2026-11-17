@@ -1,17 +1,62 @@
 import React from "react";
-import { MiraiGikaiSite } from "@/types/portal";
+import { MiraiGikaiSite, FeatureTag } from "@/types/portal";
 import { localAreaLabel } from "@/lib/site-filters";
-import { ExternalLink, MapPin, User, Sparkles } from "lucide-react";
+import { getSiteFeatures } from "@/lib/sort-sites";
+import { ExternalLink, MapPin, User, Sparkles, Pin } from "lucide-react";
+
+const FEATURE_TAG_STYLES: Record<
+  FeatureTag,
+  { label: string; bg: string; text: string; border: string; dot: string }
+> = {
+  ルビ機能: {
+    label: "ルビ機能",
+    bg: "bg-sky-50",
+    text: "text-sky-700",
+    border: "border-sky-200",
+    dot: "bg-sky-500",
+  },
+  簡単難しい切り替え: {
+    label: "簡単難しい切り替え",
+    bg: "bg-amber-50",
+    text: "text-amber-800",
+    border: "border-amber-200",
+    dot: "bg-amber-500",
+  },
+  AIアシスタント: {
+    label: "AIアシスタント",
+    bg: "bg-indigo-50",
+    text: "text-indigo-700",
+    border: "border-indigo-200",
+    dot: "bg-indigo-500",
+  },
+  AIインタビュー: {
+    label: "AIインタビュー",
+    bg: "bg-rose-50",
+    text: "text-rose-700",
+    border: "border-rose-200",
+    dot: "bg-rose-500",
+  },
+  オープンソース: {
+    label: "オープンソース",
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    border: "border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+};
 
 export function SiteCard({ site }: { site: MiraiGikaiSite }) {
   const isOita = site.id === "oita-city";
   const classification = localAreaLabel(site);
+  const features = getSiteFeatures(site);
 
   return (
     <article
       className={`rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
         site.isOfficial
           ? "bg-gradient-to-br from-amber-50/60 to-white border-amber-300 ring-1 ring-amber-300"
+          : site.featured
+          ? "bg-gradient-to-br from-amber-50/40 via-emerald-50/20 to-white border-amber-300 ring-1 ring-amber-200"
           : isOita
           ? "bg-gradient-to-br from-emerald-50/50 to-white border-emerald-300 ring-1 ring-emerald-300"
           : "bg-white border-slate-200"
@@ -32,6 +77,12 @@ export function SiteCard({ site }: { site: MiraiGikaiSite }) {
               <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-amber-600" />
                 公式
+              </span>
+            )}
+            {site.featured && !site.isOfficial && (
+              <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200">
+                <Pin className="w-3 h-3 text-amber-600" />
+                おすすめ
               </span>
             )}
             <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
@@ -67,6 +118,24 @@ export function SiteCard({ site }: { site: MiraiGikaiSite }) {
           {site.description}
         </p>
 
+        {/* 5つの特徴タグ */}
+        {features.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5 pt-2 border-t border-slate-100/80">
+            {features.map((tag) => {
+              const style = FEATURE_TAG_STYLES[tag];
+              if (!style) return null;
+              return (
+                <span
+                  key={tag}
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium border ${style.bg} ${style.text} ${style.border}`}
+                >
+                  <span className={`size-1.5 rounded-full ${style.dot}`} />
+                  {style.label}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* フッター：製作者情報 & 見に行くボタン */}

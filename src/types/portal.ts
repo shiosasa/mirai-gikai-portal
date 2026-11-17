@@ -17,6 +17,21 @@ export type SiteGenre =
 
 export type GovernanceType = "都道府県" | "市区" | "町村" | "本家・全国";
 
+export type FeatureTag =
+  | "ルビ機能"
+  | "簡単難しい切り替え"
+  | "AIアシスタント"
+  | "AIインタビュー"
+  | "オープンソース";
+
+export const FEATURE_TAGS: readonly FeatureTag[] = [
+  "ルビ機能",
+  "簡単難しい切り替え",
+  "AIアシスタント",
+  "AIインタビュー",
+  "オープンソース",
+] as const;
+
 export type MiraiGikaiSite = {
   id: string;
   prefecture: string;        // 都道府県（例: "大分県", "東京都", "全国"）
@@ -30,6 +45,13 @@ export type MiraiGikaiSite = {
   governanceType: GovernanceType;
   region: RegionCategory;
   isOfficial?: boolean;      // 本家公式かどうか
+  featured?: boolean;        // ピン留め・トップ固定フラグ
   createdAt?: string;        // 初掲載日時。編集では変えない
   isNew?: boolean;
+  features?: FeatureTag[];   // 5つの特徴タグ
+  hasRuby?: boolean;
+  hasLevelSwitch?: boolean;
+  hasAiAssistant?: boolean;
+  hasAiInterview?: boolean;
+  hasOpenSource?: boolean;
 };

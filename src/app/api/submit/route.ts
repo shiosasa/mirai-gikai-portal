@@ -6,6 +6,7 @@ export async function POST(req: NextRequest) {
 
     const {
       reportType = "new",
+      recommendationType = "self",
       prefecture,
       municipality,
       siteName,
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
       authorName,
       authorSocialUrl,
       description,
+      features,
       genres,
       governanceType,
       region,
@@ -30,9 +32,9 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      if (!prefecture || !municipality || !siteName || !url || !authorName || !description) {
+      if (!prefecture || !siteName || !url) {
         return NextResponse.json(
-          { error: "必須項目が入力されていません" },
+          { error: "必須項目（都道府県・サイト名・URL）が入力されていません" },
           { status: 400 }
         );
       }
@@ -47,20 +49,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const featureList: string[] = Array.isArray(features) ? features : [];
+    const autoDescription =
+      description ||
+      `【${recommendationType === "self" ? "自薦" : "他薦"}】特徴: ${
+        featureList.length > 0 ? featureList.join("、") : "地方版みらい議会"
+      }`;
+
     const submission = {
       id: `submission-${Date.now()}`,
       reportType,
+      recommendationType,
       prefecture: prefecture || null,
-      municipality: municipality || null,
+      municipality: municipality || prefecture || null,
       governanceType: governanceType || "市区",
       region: region || "関東",
       siteName,
       url: url || null,
-      authorName: authorName || null,
+      authorName: authorName || (recommendationType === "self" ? "開発者本人" : "推薦"),
       authorSocialUrl: authorSocialUrl || null,
-      description: description || null,
-      genres: Array.isArray(genres) ? genres : [],
-      reporterName: reporterName || "匿名",
+      description: autoDescription,
+      features: featureList,
+      genres: Array.isArray(genres) ? genres : ["Webアプリ"],
+      reporterName: reporterName || (recommendationType === "self" ? "自薦" : "他薦"),
       reporterContact: reporterContact || null,
       brokenDetail: brokenDetail || null,
       submittedAt: new Date().toISOString(),
@@ -75,16 +86,16 @@ export async function POST(req: NextRequest) {
       const { error: dbError } = await supabase.from("portal_submissions").insert({
         report_type: reportType,
         prefecture: prefecture || null,
-        municipality: municipality || null,
+        municipality: municipality || prefecture || null,
         governance_type: governanceType || "市区",
         region: region || "関東",
         site_name: siteName,
         url: url || null,
-        author_name: authorName || null,
+        author_name: submission.authorName,
         author_social_url: authorSocialUrl || null,
-        description: description || null,
-        genres: Array.isArray(genres) ? genres : [],
-        reporter_name: reporterName || "匿名",
+        description: autoDescription,
+        genres: submission.genres,
+        reporter_name: submission.reporterName,
         reporter_contact: reporterContact || null,
         broken_detail: brokenDetail || null,
         status: "pending",
@@ -103,14 +114,14 @@ export async function POST(req: NextRequest) {
           ? "⚠️ リンク切れ・閉鎖の報告"
           : reportType === "update"
           ? "✏️ 掲載情報の変更・修正連絡"
-          : "✨ 新規掲載の申請（自薦・他薦）";
+          : `✨ 掲載申請（${recommendationType === "self" ? "自薦" : "他薦"}）`;
 
       try {
         await fetch(webhookUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            content: `📢 **地方版みらい議会【${typeLabel}】が届きました！**\n**対象サイト**: ${siteName}\n**URL**: ${url || "未記入"}\n**地域**: ${prefecture || ""} ${municipality || ""}\n**内容**: ${brokenDetail || description}\n**報告者**: ${reporterName || "匿名"} (${reporterContact || "連絡先なし"})`,
+            content: `📢 **地方版みらい議会【${typeLabel}】が届きました！**\n**対象サイト**: ${siteName}\n**URL**: ${url || "未記入"}\n**地域**: ${prefecture || ""} ${municipality || ""}\n**特徴タグ**: ${featureList.join("、") || "なし"}\n**申請区分**: ${recommendationType === "self" ? "自薦" : "他薦"}`,
           }),
         });
       } catch (err) {
