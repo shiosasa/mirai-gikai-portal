@@ -108,12 +108,19 @@ test("非破壊的であること", () => {
   assert.equal(original[0].id, "1");
 });
 
-test("getSiteFeatures: 5つの特徴タグが正しく抽出・正規化される", () => {
+test("getSiteFeatures: 特徴タグが正しく抽出・正規化される（簡単・難しいの切り替え）", () => {
   const site = createMockSite({
-    features: ["ルビ機能", "オープンソース"],
+    features: ["ルビ機能", "簡単難しい切り替え", "オープンソース"],
     hasAiAssistant: true,
+    hasAiInterview: true,
   });
 
   const tags = getSiteFeatures(site);
-  assert.deepEqual(tags, ["ルビ機能", "AIアシスタント", "オープンソース"]);
+  assert.deepEqual(tags, [
+    "ルビ機能",
+    "簡単・難しいの切り替え",
+    "AIアシスタント",
+    "AIインタビュー",
+    "オープンソース",
+  ]);
 });

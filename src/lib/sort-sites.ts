@@ -2,36 +2,49 @@ import type { FeatureTag, MiraiGikaiSite } from "@/types/portal";
 
 export const FEATURE_TAGS: readonly FeatureTag[] = [
   "ルビ機能",
-  "簡単難しい切り替え",
+  "簡単・難しいの切り替え",
   "AIアシスタント",
   "AIインタビュー",
   "オープンソース",
 ] as const;
 
 /**
- * サイトに備わっている5つの特徴タグを抽出・正規化して返す
+ * サイトに備わっている特徴タグを抽出・正規化して返す
  */
 export function getSiteFeatures(site: MiraiGikaiSite): FeatureTag[] {
   const result = new Set<FeatureTag>();
 
+  const normalizeTag = (tag: string): FeatureTag | null => {
+    if (tag === "簡単難しい切り替え" || tag === "簡単・難しいの切り替え") {
+      return "簡単・難しいの切り替え";
+    }
+    if (FEATURE_TAGS.includes(tag as FeatureTag)) {
+      return tag as FeatureTag;
+    }
+    return null;
+  };
+
   // 配列指定の features があれば取り込む
   if (Array.isArray(site.features)) {
     for (const tag of site.features) {
-      if (FEATURE_TAGS.includes(tag)) {
-        result.add(tag);
-      }
+      const normalized = normalizeTag(tag);
+      if (normalized) result.add(normalized);
     }
   }
 
   // 個別 boolean プロパティの反映
   if (site.hasRuby) result.add("ルビ機能");
-  if (site.hasLevelSwitch) result.add("簡単難しい切り替え");
+  if (site.hasLevelSwitch) result.add("簡単・難しいの切り替え");
   if (site.hasAiAssistant) result.add("AIアシスタント");
   if (site.hasAiInterview) result.add("AIインタビュー");
   if (site.hasOpenSource) result.add("オープンソース");
 
-  // 既存の genres からの補完（既存データ互換用）
+  // 既存の genres からの補完（既存データ・管理画面保存互換用）
   if (Array.isArray(site.genres)) {
+    for (const genre of site.genres) {
+      const normalized = normalizeTag(genre);
+      if (normalized) result.add(normalized);
+    }
     if (site.genres.includes("AI要約・チャット")) {
       result.add("AIアシスタント");
     }

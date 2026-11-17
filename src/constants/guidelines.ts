@@ -31,8 +31,8 @@ export const LISTING_GUIDELINES = {
       {
         id: "roots_and_features",
         category: "技術的ルーツと機能",
-        text: "本家をフォーク（あるいは踏襲）して作られており、「ルビ機能」「簡単・難しいの切り替え」「AIアシスタント」などが実装されていること。",
-        relatedTags: ["ルビ機能", "簡単難しい切り替え", "AIアシスタント"] as FeatureTag[],
+        text: "本家をフォークして作られており、或いは模して造られており「ルビ機能」「簡単・難しいの切り替え」「AIアシスタント」などが実装されていること。",
+        relatedTags: ["ルビ機能", "簡単・難しいの切り替え", "AIアシスタント"] as FeatureTag[],
       },
       {
         id: "interactive",

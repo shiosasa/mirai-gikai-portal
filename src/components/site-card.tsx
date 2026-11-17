@@ -15,8 +15,15 @@ const FEATURE_TAG_STYLES: Record<
     border: "border-sky-200",
     dot: "bg-sky-500",
   },
+  "簡単・難しいの切り替え": {
+    label: "簡単・難しいの切り替え",
+    bg: "bg-amber-50",
+    text: "text-amber-800",
+    border: "border-amber-200",
+    dot: "bg-amber-500",
+  },
   簡単難しい切り替え: {
-    label: "簡単難しい切り替え",
+    label: "簡単・難しいの切り替え",
     bg: "bg-amber-50",
     text: "text-amber-800",
     border: "border-amber-200",

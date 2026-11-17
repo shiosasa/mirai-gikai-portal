@@ -19,6 +19,7 @@ export type GovernanceType = "都道府県" | "市区" | "町村" | "本家・�
 
 export type FeatureTag =
   | "ルビ機能"
+  | "簡単・難しいの切り替え"
   | "簡単難しい切り替え"
   | "AIアシスタント"
   | "AIインタビュー"
@@ -26,11 +27,20 @@ export type FeatureTag =
 
 export const FEATURE_TAGS: readonly FeatureTag[] = [
   "ルビ機能",
-  "簡単難しい切り替え",
+  "簡単・難しいの切り替え",
   "AIアシスタント",
   "AIインタビュー",
   "オープンソース",
 ] as const;
+
+/** 4大機能タグ（主要機能） */
+export const CORE_FEATURE_TAGS = [
+  "ルビ機能",
+  "簡単・難しいの切り替え",
+  "AIアシスタント",
+  "AIインタビュー",
+] as const;
+export type CoreFeatureTag = (typeof CORE_FEATURE_TAGS)[number];
 
 export type MiraiGikaiSite = {
   id: string;
