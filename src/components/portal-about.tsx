@@ -42,11 +42,11 @@ export function PortalAbout() {
       </div>
 
       {/* 掲載基準・ガイドライン */}
-      <details className="group rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 text-sm" open>
+      <details className="group rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 text-sm">
         <summary className="cursor-pointer list-none font-bold text-slate-800 flex items-center justify-between">
           <span className="flex items-center gap-2 text-emerald-950 font-bold">
             <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-            【掲載基準】地方版みらい議会のマスト条件・選択条件
+            【掲載基準】地方版みらい議会のマスト条件・勘案条件
           </span>
           <ChevronDown className="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform shrink-0" />
         </summary>

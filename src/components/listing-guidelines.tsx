@@ -20,14 +20,14 @@ export function ListingGuidelines({ className = "" }: { className?: string }) {
         </ol>
       </div>
 
-      {/* 選択条件 */}
+      {/* 勘案条件 */}
       <div className="space-y-2 pt-3 border-t border-emerald-200/50">
         <h3 className="font-bold text-emerald-900 flex items-center gap-1.5 text-sm sm:text-base">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          【選択条件】（以下のいずれかが備わっていること）
+          【勘案条件】（以下のいずれかが備わっているか）
         </h3>
         <p className="text-xs text-slate-600 leading-relaxed">
-          上記の5つの特徴タグのいずれかが実装されている、またはオープンソース等で公開されていること。
+          上記の5つの特徴タグのいずれかが実装されているか、またはオープンソース等で公開されているか。
         </p>
         <ul className="space-y-2 pl-1 text-slate-700 leading-relaxed">
           {LISTING_GUIDELINES.optionalConditions.items.map((item) => (

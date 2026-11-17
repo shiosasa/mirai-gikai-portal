@@ -63,7 +63,7 @@ export default function SubmitPage() {
       return;
     }
     if (selectedFeatures.length === 0) {
-      setErrorMessage("特徴・アプローチ（選択条件）を1つ以上選択してください。");
+      setErrorMessage("特徴・アプローチ（勘案条件）を1つ以上選択してください。");
       return;
     }
 
